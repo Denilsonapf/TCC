@@ -257,6 +257,8 @@ def data_analysis(alldata):
                         username = "mail"
                     elif "backup" in x[0].lower():
                         username = "backup"
+                    elif "www-data" in x[0].lower():
+                        username = "www-data"    
                     else: 
                         username = "other"
                     if username not in count:
@@ -266,13 +268,32 @@ def data_analysis(alldata):
     plt.bar(count.keys(), count.values())
     plt.gcf().autofmt_xdate(rotation=45)
     plt.savefig('pam.af_user.pdf')
-    plt.clf()  
+    plt.clf() 
+
+     #printar o total de tentativas para o usuário inválido
+    for email in alldata:
+        x.append(datetime.strptime(email, '%Y-%m-%d').date())
+        count = {}
+        for datatype in alldata[email]:
+            if datatype.startswith("pam.iu"):
+               
+                for x in alldata[email][datatype]: 
+                    if "unknown account" in x[0].lower():
+                        username = "Unknown Account"
+                    if username not in count:
+                        count[username] = 0
+                    count[username] +=x[1]
+        break
+    plt.bar(count.keys(), count.values())
+    plt.gcf().autofmt_xdate(rotation=45)
+    plt.savefig('pam.iu_invalid_user.pdf')
+    plt.clf()   
     #printar o total de ips com falha
     x = ()
     y = ()
     count = {}
-    test = ipapi.location(ip='177.142.144.108', output='country')
-    print("Região do ip",test)
+    #test = ipapi.location(ip='177.142.144.108', output='country')
+    #print("Região do ip",test)
     for email in alldata:
         #x.append(datetime.strptime(email, '%Y-%m-%d').date())
         #count = {}
@@ -299,22 +320,25 @@ def data_analysis(alldata):
             if datatype.startswith("pam.af"):
                
                 for x in alldata[email][datatype]:
-                    test = ipapi.location(ip=x[1], output='country') 
-                    if test == 'BR':
-                        result = ipapi.location(ip=x[1], output='region')
-                        result2 = ipapi.location(ip=x[1], output='city')
-                        print("resultados", result)
-                        print ("cidade", result2)
-                    else: 
-                        continue
-                    if username not in count:
-                        count[username] = 0
-                    count[username] +=x[2]
+                    filename = os.path.join(os.getcwd(), "data", ip.replace('.', '-'))
+                    print(filename)
+                    if os.path.exists(filename):
+                        with open(filename, 'rb') as f:
+                            test = pickle.load(f)
+                            if test['country'] == 'BR':
+                                region = test['region']
+                                city = test['city']
+                                if city not in count:
+                                    count[city] = 0
+                                count[city] += 1
+                                if region not in count:
+                                    count[region] = 0
+                                count[region] += 1
         break
-    #plt.bar(count.keys(), count.values())
-    #plt.gcf().autofmt_xdate(rotation=45)
-    #plt.savefig('pam.af_user.pdf')
-    #plt.clf()          
+    plt.bar(count.keys(), count.values())
+    plt.gcf().autofmt_xdate(rotation=45)
+    plt.savefig('pam.af_city.pdf')
+    plt.clf()          
     #printar a quatidade de acessos inválidos 
     for email in alldata:
         #print(email, alldata[email].keys())
@@ -335,6 +359,44 @@ def data_analysis(alldata):
     plt.gcf().autofmt_xdate(rotation=45)
     plt.savefig('pam-af.pdf')
     plt.clf()
+
+ # Quantidade de IPs que acessaram o Web server por dia
+    x = []
+    y = []
+    for email in alldata:
+        x.append(datetime.strptime(email, '%Y-%m-%d').date())
+        for datatype in alldata[email]:
+            if datatype == "sshd.failed":
+                y.append(len(alldata[email]["sshd.failed"]))
+    
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%Y'))
+    plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=5))
+    plt.bar(x,y)
+    plt.gcf().autofmt_xdate()
+    plt.savefig('sshd.ips-days.pdf')
+    plt.clf()
+#printar o total de tentativas para cada país
+    for email in alldata:
+        #x.append(datetime.strptime(email, '%Y-%m-%d').date())
+        count = {}
+        for datatype in alldata[email]:
+            if datatype.startswith("sshd.failed"):
+               
+                for x in alldata[email][datatype]:
+                    filename = os.path.join(os.getcwd(), "data", ip.replace('.', '-'))
+                    print(filename)
+                    if os.path.exists(filename):
+                        with open(filename, 'rb') as f:
+                            test = pickle.load(f)
+                            country = test['country']
+                            if country not in count:
+                                count[country] = 0
+                            count[country] += 1
+        break
+    plt.bar(count.keys(), count.values())
+    plt.gcf().autofmt_xdate(rotation=45)
+    plt.savefig('pam.sshd_coutry.pdf')
+    plt.clf()   
 
 ### MAIN ###
 
