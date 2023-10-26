@@ -171,7 +171,7 @@ def data_analysis(alldata):
     plt.savefig('https.ips-days.pdf')
     plt.clf()
 
-    # Quantidade de IPs que acessaram o Web server por dia
+    # Quantidade de IPs de cada país que acessaram o Web server
     for email in alldata:
         #print(email, alldata[email].keys())
         for datatype in alldata[email]:
@@ -334,6 +334,12 @@ def data_analysis(alldata):
                                 if region not in count:
                                     count[region] = 0
                                 count[region] += 1
+                    else:
+                        ipdata = ipapi.location(ip=ip)
+                        #time.sleep(1)
+                        with open(filename, 'wb') as f:
+                            pickle.dump(ipdata, f)
+                    return ipdata            
         break
     plt.bar(count.keys(), count.values())
     plt.gcf().autofmt_xdate(rotation=45)
@@ -392,6 +398,13 @@ def data_analysis(alldata):
                             if country not in count:
                                 count[country] = 0
                             count[country] += 1
+                    else:
+                        ipdata = ipapi.location(ip=ip)
+                        #time.sleep(1)
+                        with open(filename, 'wb') as f:
+                            pickle.dump(ipdata, f)
+                    return ipdata        
+
         break
     plt.bar(count.keys(), count.values())
     plt.gcf().autofmt_xdate(rotation=45)
